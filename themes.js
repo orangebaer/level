@@ -46,5 +46,11 @@ window.LEVEL_THEMES = [
     bg: '#ffc933', surface: '#1f2326', ink: '#111111', mark: '#f2f2f2',
     text: '#111111', onInk: '#ffffff',
     ok: '#0b7d4f', onOk: '#ffffff', bad: '#ffffff', onBad: '#000000'
+  },
+  {
+    id: 'pine-coral', name: 'Pine & Coral', scheme: 'dark',
+    bg: '#39393a', surface: '#297373', ink: '#e6e6e6',
+    text: '#e6e6e6', onInk: '#39393a',
+    ok: '#85ffc7', onOk: '#39393a', bad: '#ff8552', onBad: '#000000'
   }
 ];
