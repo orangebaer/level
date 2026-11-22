@@ -3,28 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="color-scheme" content="light">
-<meta name="theme-color" content="#dee5e5">
+<meta name="color-scheme" content="light" id="metaScheme">
+<meta name="theme-color" content="#dee5e5" id="metaTheme">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="default" id="metaStatus">
 <meta name="apple-mobile-web-app-title" content="Level">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <title>Level</title>
 <style>
-  /* Palette: Ebony, Alabaster Grey, Muted Teal, Mint Leaf, Rosewood, plus black and white for text.
-     Black text passes 4.5:1 on Alabaster (17:1), Teal (11:1), Mint (8.3:1) and Rosewood (4.7:1).
-     White text is used on Ebony (6.2:1). Mint = level, Rosewood = not level; the state is
-     also always spelled out in text, never colour alone. */
+  /* All colours come from semantic roles. The values below are only a fallback;
+     themes.js defines the schemes and the engine in <head> writes the active one here. */
   :root {
-    --text: #000;
-    --ink: #5f634f;      /* Ebony: outlines, ticks, filled buttons */
-    --bg: #dee5e5;       /* Alabaster Grey */
-    --teal: #9dc5bb;     /* Muted Teal */
-    --mint: #17b890;     /* Mint Leaf */
-    --rose: #b15e6c;     /* Rosewood */
+    --bg: #dee5e5; --surface: #9dc5bb; --ink: #5f634f; --mark: #5f634f;
+    --text: #000; --on-ink: #fff; --ok: #17b890; --on-ok: #000; --bad: #b15e6c; --on-bad: #000;
     --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -40,31 +34,34 @@
   }
 
   /* ---- top pills ---- */
-  header { display: flex; justify-content: space-between; align-items: center; min-height: 34px; }
+  header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; min-height: 36px; }
+  #modePill { justify-self: start; }
+  #tiltPill { justify-self: end; }
   .pill {
     display: inline-flex; align-items: center; height: 32px; padding: 0 14px; border-radius: 16px;
     border: 2px solid var(--ink); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums;
   }
   .pill:empty { visibility: hidden; }
-  body.is-level #tiltPill { background: var(--mint); }
+  body.is-level #tiltPill { background: var(--ok); color: var(--on-ok); }
 
   /* ---- instrument ---- */
   #stage { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
   svg#vis { height: 100%; max-height: 100%; width: auto; max-width: 100%; aspect-ratio: 1 / 1; overflow: visible; }
-  .vial { fill: var(--teal); stroke: var(--ink); stroke-width: 3; }
-  .lvring { fill: none; stroke: var(--mint); stroke-width: 9; opacity: 0; transition: opacity .2s; }
+  .vial { fill: var(--surface); stroke: var(--ink); stroke-width: 3; }
+  .lvring { fill: none; stroke: var(--ok); stroke-width: 9; opacity: 0; transition: opacity .2s; }
   body.is-level .lvring { opacity: 1; }
-  .grid line, .grid circle { fill: none; stroke: var(--ink); stroke-opacity: .5; stroke-width: 1.2; }
-  .target { fill: none; stroke: var(--ink); stroke-width: 2.5; }
-  .bubble { fill: var(--rose); stroke: var(--ink); stroke-width: 3; transition: fill .2s; }
-  body.is-level .bubble { fill: var(--mint); }
+  .grid line, .grid circle { fill: none; stroke: var(--mark); stroke-opacity: .5; stroke-width: 1.2; }
+  .tick { stroke: var(--mark); }
+  .target { fill: none; stroke: var(--mark); stroke-width: 2.5; }
+  .bubble { fill: var(--bad); stroke: var(--mark); stroke-width: 3; transition: fill .2s; }
+  body.is-level .bubble { fill: var(--ok); }
   .chip { fill: var(--bg); }
   .scale-t { fill: var(--text); font: 700 9.5px var(--font); text-anchor: middle; }
   .hidden { display: none !important; }
 
   /* ---- readouts ---- */
   .readouts { display: grid; grid-template-columns: 1fr 2px 1fr; align-items: stretch; }
-  .readouts .rule { background: var(--teal); margin: 8px 0; border-radius: 1px; }
+  .readouts .rule { background: var(--surface); margin: 8px 0; border-radius: 1px; }
   .read { text-align: center; padding: 0 4px; min-width: 0; }
   .read .cap { font-size: 15px; font-weight: 600; }
   .num {
@@ -75,8 +72,8 @@
   .num .sg { display: inline-block; width: .66em; text-align: right; padding-right: .04em; }
   .num .dg { font-size: .42em; font-weight: 500; margin-left: .08em; align-self: flex-start; padding-top: .2em; letter-spacing: 0; }
   .read .hint { width: fit-content; margin: 2px auto 0; min-height: 28px; padding: 0 12px; border-radius: 14px; font-size: 14px; font-weight: 600; display: flex; align-items: center; }
-  .hint.off { background: var(--rose); }
-  .hint.lv { background: var(--mint); }
+  .hint.off { background: var(--bad); color: var(--on-bad); border: 2px solid var(--ink); }
+  .hint.lv { background: var(--ok); color: var(--on-ok); border: 2px solid var(--ink); }
 
   /* ---- controls ---- */
   .controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 4px; }
@@ -88,10 +85,28 @@
   button:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
   .seg { display: flex; border: 2px solid var(--ink); border-radius: 12px; padding: 2px; gap: 2px; }
   .seg button { border: 0; height: 38px; padding: 0 12px; border-radius: 8px; font-variant-numeric: tabular-nums; }
-  .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); }
   .actions { display: flex; gap: 8px; }
-  #zeroBtn { background: var(--ink); color: #fff; }
+  #zeroBtn { background: var(--ink); color: var(--on-ink); }
   #resetBtn { padding: 0 14px; }
+
+  /* ---- theme picker ---- */
+  .theme-btn { width: 36px; height: 36px; padding: 0; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; }
+  .theme-btn svg { width: 18px; height: 18px; }
+  .theme-btn circle { fill: var(--ink); }
+  #themes { position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column; justify-content: flex-end; }
+  #themes .scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, .45); }
+  #themes .sheet {
+    position: relative; background: var(--bg); border-top: 2px solid var(--ink); border-radius: 22px 22px 0 0;
+    padding: 18px 18px max(env(safe-area-inset-bottom), 18px); max-height: 75dvh; overflow: auto; display: flex; flex-direction: column; gap: 10px;
+  }
+  .sheet-title { font-size: 20px; font-weight: 700; padding: 0 2px 4px; }
+  .theme-row { display: flex; align-items: center; gap: 14px; height: 58px; padding: 0 14px 0 10px; text-align: left; width: 100%; }
+  .theme-row svg { width: 46px; height: 34px; flex: none; }
+  .theme-row .nm { flex: 1; }
+  .theme-row[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); }
+  .theme-row[aria-pressed="true"]::after { content: "\2713"; font-size: 18px; }
+  .done { margin-top: 4px; background: var(--ink); color: var(--on-ink); }
 
   /* ---- start overlay ---- */
   #start {
@@ -101,20 +116,70 @@
   #start svg { width: 84px; height: 84px; margin-bottom: 6px; }
   #start h1 { margin: 0; font-size: 36px; font-weight: 700; letter-spacing: -.02em; }
   #start p { margin: 0; max-width: 24em; font-size: 17px; line-height: 1.45; }
-  #start .go { margin-top: 12px; height: 54px; padding: 0 44px; font-size: 18px; border-radius: 27px; background: var(--ink); color: #fff; }
+  #start .go { margin-top: 12px; height: 54px; padding: 0 44px; font-size: 18px; border-radius: 27px; background: var(--ink); color: var(--on-ink); }
   #start small { font-size: 13px; font-weight: 500; }
-  #msg { max-width: 26em; font-size: 15px; line-height: 1.4; text-align: left; padding: 10px 14px; border-left: 5px solid var(--rose); background: var(--teal); border-radius: 4px; }
+  #msg { max-width: 26em; font-size: 15px; line-height: 1.4; text-align: left; padding: 10px 14px; border: 2px solid var(--ink); border-left: 6px solid var(--bad); border-radius: 4px; }
   #msg:empty { display: none; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   @media (max-height: 640px) { .num { font-size: clamp(44px, 14vw, 62px); } .read .hint { font-size: 13px; } }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
 </style>
+<script src="themes.js"></script>
+<script>
+/* Theme engine: applies a scheme from themes.js as CSS variables before first paint. */
+(function () {
+  var FALLBACK = { id: 'ebony-mint', name: 'Ebony & Mint', scheme: 'light', bg: '#dee5e5', surface: '#9dc5bb', ink: '#5f634f',
+    text: '#000000', onInk: '#ffffff', ok: '#17b890', onOk: '#000000', bad: '#b15e6c', onBad: '#000000' };
+  var list = (window.LEVEL_THEMES && window.LEVEL_THEMES.length) ? window.LEVEL_THEMES : [FALLBACK];
+  var current = null;
+
+  function lin(c) { c /= 255; return c <= .04045 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); }
+  function lum(h) { var n = parseInt(h.slice(1), 16); return .2126 * lin(n >> 16 & 255) + .7152 * lin(n >> 8 & 255) + .0722 * lin(n & 255); }
+  function ratio(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); }
+  function isHex(v) { return typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v); }
+
+  function check(t) {
+    var checks = [['text', 'bg', 4.5], ['onInk', 'ink', 4.5], ['onOk', 'ok', 4.5], ['onBad', 'bad', 4.5], ['mark', 'surface', 3], ['ink', 'bg', 3]];
+    checks.forEach(function (c) {
+      var r = ratio(t[c[0]], t[c[1]]);
+      if (r < c[2]) console.warn('[theme ' + t.id + '] ' + c[0] + ' on ' + c[1] + ' has contrast ' + r.toFixed(1) + ':1 (want ' + c[2] + ':1)');
+    });
+  }
+
+  function find(id) { for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return null; }
+
+  function apply(id, persist) {
+    var t = find(id) || list[0], full = {}, k;
+    for (k in FALLBACK) full[k] = isHex(t[k]) || k === 'id' || k === 'name' || k === 'scheme' ? t[k] : FALLBACK[k];
+    full.mark = isHex(t.mark) ? t.mark : full.ink;
+    full.id = t.id; full.name = t.name || t.id; full.scheme = t.scheme === 'dark' ? 'dark' : 'light';
+    var vars = { bg: 'bg', surface: 'surface', ink: 'ink', mark: 'mark', text: 'text', onInk: 'on-ink', ok: 'ok', onOk: 'on-ok', bad: 'bad', onBad: 'on-bad' };
+    var st = document.documentElement.style;
+    for (k in vars) st.setProperty('--' + vars[k], full[k]);
+    document.getElementById('metaTheme').setAttribute('content', full.bg);
+    document.getElementById('metaScheme').setAttribute('content', full.scheme);
+    document.getElementById('metaStatus').setAttribute('content', full.scheme === 'dark' ? 'black-translucent' : 'default');
+    current = t.id; check(full);
+    if (persist) { try { localStorage.setItem('level.theme', t.id); } catch (e) {} }
+    if (window.LevelThemes && window.LevelThemes.onChange) window.LevelThemes.onChange(t.id);
+  }
+
+  window.LevelThemes = { list: list, apply: apply, current: function () { return current; }, onChange: null };
+
+  var q = null, saved = null;
+  try { q = new URLSearchParams(location.search).get('theme'); saved = localStorage.getItem('level.theme'); } catch (e) {}
+  apply(q || saved || list[0].id, !!q);
+})();
+</script>
 </head>
 <body>
 <div id="app">
   <header>
     <span class="pill" id="modePill">Flat</span>
+    <button class="theme-btn" id="themeBtn" aria-label="Color scheme" aria-haspopup="dialog">
+      <svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="5" cy="5" r="3"/><circle cx="13" cy="5" r="3"/><circle cx="5" cy="13" r="3"/><circle cx="13" cy="13" r="3"/></svg>
+    </button>
     <span class="pill" id="tiltPill"></span>
   </header>
 
@@ -174,12 +239,21 @@
   </div>
 </div>
 
+<div id="themes" class="hidden" role="dialog" aria-modal="true" aria-label="Color scheme">
+  <div class="scrim" id="themeScrim"></div>
+  <div class="sheet">
+    <div class="sheet-title">Color scheme</div>
+    <div id="themeList" style="display:flex;flex-direction:column;gap:8px"></div>
+    <button class="done" id="themeDone">Done</button>
+  </div>
+</div>
+
 <div id="start">
   <svg viewBox="0 0 84 84" aria-hidden="true">
-    <rect x="3" y="22" width="78" height="40" rx="20" fill="#9dc5bb" stroke="#5f634f" stroke-width="3"/>
-    <line x1="23" y1="29" x2="23" y2="55" stroke="#5f634f" stroke-width="2.5"/>
-    <line x1="61" y1="29" x2="61" y2="55" stroke="#5f634f" stroke-width="2.5"/>
-    <ellipse cx="42" cy="42" rx="12" ry="10" fill="#17b890" stroke="#5f634f" stroke-width="3"/>
+    <rect class="vial" x="3" y="22" width="78" height="40" rx="20"/>
+    <line class="target" x1="23" y1="29" x2="23" y2="55"/>
+    <line class="target" x1="61" y1="29" x2="61" y2="55"/>
+    <ellipse class="bubble" style="fill: var(--ok)" cx="42" cy="42" rx="12" ry="10"/>
   </svg>
   <h1>Level</h1>
   <p>Lay your phone flat on a surface, or stand it on an edge. Tap Start and allow motion access.</p>
@@ -298,7 +372,7 @@
       var l = document.createElementNS(SVGNS, 'line');
       l.setAttribute('x1', (150 + r0 * Math.sin(a)).toFixed(2)); l.setAttribute('y1', (150 - r0 * Math.cos(a)).toFixed(2));
       l.setAttribute('x2', (150 + r1 * Math.sin(a)).toFixed(2)); l.setAttribute('y2', (150 - r1 * Math.cos(a)).toFixed(2));
-      l.setAttribute('stroke', '#5f634f');
+      l.setAttribute('class', 'tick');
       l.setAttribute('stroke-width', major ? '2.4' : (mid ? '1.6' : '1'));
       g.appendChild(l);
     }
@@ -436,6 +510,41 @@
   });
   $('resetBtn').addEventListener('click', function () { cal = { x: 0, y: 0 }; save(); });
   $('startBtn').addEventListener('click', requestAccess);
+
+
+  // ---------- colour scheme picker ----------
+  function themeIcon(t) {
+    var mk = /^#[0-9a-f]{6}$/i.test(t.mark) ? t.mark : t.ink;
+    return '<svg viewBox="0 0 46 34" aria-hidden="true"><rect x="1" y="1" width="44" height="32" rx="8" fill="' + t.bg + '" stroke="' + t.ink + '" stroke-width="2"/>' +
+      '<circle cx="16" cy="17" r="10" fill="' + t.surface + '" stroke="' + t.ink + '" stroke-width="2"/><circle cx="16" cy="17" r="4" fill="' + t.bad + '" stroke="' + mk + '" stroke-width="1.5"/>' +
+      '<circle cx="35" cy="11" r="4.5" fill="' + t.ok + '"/><circle cx="35" cy="23.5" r="4.5" fill="' + t.bad + '"/></svg>';
+  }
+  function buildThemeList() {
+    var box = $('themeList'); box.innerHTML = '';
+    window.LevelThemes.list.forEach(function (t) {
+      var b = document.createElement('button');
+      b.className = 'theme-row'; b.dataset.id = t.id;
+      b.innerHTML = themeIcon(t) + '<span class="nm"></span>';
+      b.querySelector('.nm').textContent = t.name || t.id;
+      box.appendChild(b);
+    });
+    syncThemeRows();
+  }
+  function syncThemeRows() {
+    var rows = document.querySelectorAll('.theme-row'), cur = window.LevelThemes.current();
+    for (var i = 0; i < rows.length; i++) rows[i].setAttribute('aria-pressed', rows[i].dataset.id === cur ? 'true' : 'false');
+  }
+  function openThemes(open) { $('themes').classList.toggle('hidden', !open); if (open) $('themeDone').focus(); else $('themeBtn').focus(); }
+  $('themeBtn').addEventListener('click', function () { openThemes(true); });
+  $('themeDone').addEventListener('click', function () { openThemes(false); });
+  $('themeScrim').addEventListener('click', function () { openThemes(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') openThemes(false); });
+  $('themeList').addEventListener('click', function (e) {
+    var b = e.target.closest('.theme-row'); if (!b) return;
+    window.LevelThemes.apply(b.dataset.id, true);
+  });
+  window.LevelThemes.onChange = syncThemeRows;
+  buildThemeList();
 
   window.__level = { upFromEuler: upFromEuler, toScreen: toScreen, onOrientation: onOrientation };
 
