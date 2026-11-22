@@ -3,123 +3,217 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#05080b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Level">
-<meta name="theme-color" content="#000000">
-<title>Spirit Level</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Level</title>
 <style>
   :root {
-    --bg: #000;
-    --fg: #f2f2f2;
-    --dim: #8a8a8e;
-    --line: #3a3a3c;
-    --ok: #30d158;
-    --warn: #ffd60a;
-    --accent: #0a84ff;
+    --bg: #05080b;
+    --glow: #0f1b24;
+    --fg: #f3f6f8;
+    --dim: #98a3ad;
+    --hair: rgba(255, 255, 255, .10);
+    --chip: rgba(255, 255, 255, .07);
+    --chip-on: rgba(255, 255, 255, .16);
+    --lv: #52e6b4;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body {
-    margin: 0; height: 100%; background: var(--bg); color: var(--fg);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-    overflow: hidden; touch-action: manipulation;
-    -webkit-user-select: none; user-select: none;
+  html, body { margin: 0; height: 100%; background: var(--bg); }
+  body {
+    color: var(--fg); font-family: var(--font); overflow: hidden; touch-action: manipulation;
+    -webkit-user-select: none; user-select: none; -webkit-font-smoothing: antialiased;
+    background:
+      radial-gradient(120% 60% at 50% 0%, var(--glow) 0%, rgba(15, 27, 36, 0) 70%),
+      var(--bg);
   }
+
   #app {
-    height: 100%; display: flex; flex-direction: column; align-items: center;
-    padding: max(env(safe-area-inset-top), 12px) max(env(safe-area-inset-right), 14px)
-             max(env(safe-area-inset-bottom), 12px) max(env(safe-area-inset-left), 14px);
-    gap: 10px;
+    height: 100vh; height: 100dvh; display: flex; flex-direction: column; gap: 8px;
+    padding: max(env(safe-area-inset-top), 10px) max(env(safe-area-inset-right), 18px)
+             max(env(safe-area-inset-bottom), 12px) max(env(safe-area-inset-left), 18px);
   }
-  header { width: 100%; display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--dim); }
-  #modeLabel { letter-spacing: .08em; text-transform: uppercase; }
-  #status { font-variant-numeric: tabular-nums; }
 
-  #stage { flex: 1 1 auto; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; }
-  svg#vis { max-width: 100%; max-height: 100%; width: auto; height: 100%; aspect-ratio: 1 / 1; }
-
-  .readouts { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .box { border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px 8px; text-align: center; background: #0b0b0c; }
-  .box .name { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
-  .box .val { font-size: clamp(40px, 13vw, 64px); font-weight: 600; line-height: 1.05; font-variant-numeric: tabular-nums; }
-  .box .hint { font-size: 13px; color: var(--dim); min-height: 1.3em; }
-  .box.ok .val { color: var(--ok); }
-
-  .controls { width: 100%; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
-  .seg { display: flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-  .seg button { border: 0; border-radius: 0; background: transparent; padding: 9px 12px; }
-  .seg button + button { border-left: 1px solid var(--line); }
-  .seg button.on { background: #2c2c2e; color: #fff; }
-  button {
-    font: inherit; font-size: 15px; color: var(--fg); background: #1c1c1e;
-    border: 1px solid var(--line); border-radius: 10px; padding: 9px 14px; cursor: pointer;
+  /* ---- top pills ---- */
+  header { display: flex; justify-content: space-between; align-items: center; min-height: 34px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 13px;
+    border-radius: 15px; background: var(--chip); color: var(--dim);
+    font-size: 14px; font-weight: 500; letter-spacing: .01em; font-variant-numeric: tabular-nums;
+    transition: color .3s, background .3s;
   }
-  button:active { background: #2c2c2e; }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-  .row { display: flex; gap: 8px; }
+  .pill:empty { visibility: hidden; }
+  .pill b { color: var(--fg); font-weight: 600; }
+  body.is-level #tiltPill { color: var(--lv); background: rgba(82, 230, 180, .12); }
 
-  #start {
-    position: fixed; inset: 0; background: rgba(0,0,0,.94); display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 18px; text-align: center; padding: 28px; z-index: 10;
-  }
-  #start h1 { margin: 0; font-size: 28px; font-weight: 600; }
-  #start p { margin: 0; max-width: 32em; color: var(--dim); line-height: 1.45; font-size: 15px; }
-  #start button.primary { font-size: 18px; padding: 14px 28px; border-radius: 14px; }
-  #msg { color: var(--warn); font-size: 14px; max-width: 32em; min-height: 1.2em; }
+  /* ---- instrument ---- */
+  #stage { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
+  svg#vis { height: 100%; max-height: 100%; width: auto; max-width: 100%; aspect-ratio: 1 / 1; overflow: visible; }
+  #halo, .hglow { opacity: 0; transition: opacity .4s ease; }
+  body.is-level #halo { opacity: 1; }
+  body.is-level .hglow { opacity: .55; }
+  .bub-lv { opacity: 0; transition: opacity .25s ease; }
+  body.is-level .bub-lv { opacity: 1; }
+  .bub-n { transition: opacity .25s ease; }
+  body.is-level .bub-n { opacity: 0; }
+  .target { stroke: rgba(255, 255, 255, .38); transition: stroke .3s; }
+  body.is-level .target { stroke: var(--lv); }
+  .scale-t { fill: rgba(255, 255, 255, .42); font: 500 8.5px var(--font); }
   .hidden { display: none !important; }
+
+  /* ---- readouts ---- */
+  .readouts { display: grid; grid-template-columns: 1fr 1px 1fr; align-items: stretch; padding-top: 2px; }
+  .readouts .rule { background: var(--hair); margin: 6px 0; }
+  .read { text-align: center; padding: 0 4px; min-width: 0; }
+  .read .cap { font-size: 15px; font-weight: 500; color: var(--dim); }
+  .num {
+    display: flex; justify-content: center; align-items: baseline; white-space: nowrap;
+    font-size: clamp(52px, 17vw, 78px); font-weight: 200; letter-spacing: -.035em; line-height: 1.04;
+    font-variant-numeric: tabular-nums; transition: color .25s;
+  }
+  .num .sg { display: inline-block; width: .5em; text-align: right; color: var(--dim); font-weight: 200; }
+  .num .dg { font-size: .42em; font-weight: 300; color: var(--dim); margin-left: .08em; align-self: flex-start; padding-top: .2em; letter-spacing: 0; }
+  .read.ok .num { color: var(--lv); }
+  .read .hint { min-height: 1.4em; font-size: 14px; font-weight: 500; color: var(--dim); display: flex; justify-content: center; align-items: center; gap: 5px; }
+  .read.ok .hint { color: var(--lv); }
+  .arrow { font-size: 15px; line-height: 1; }
+
+  /* ---- controls ---- */
+  .controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 6px; }
+  button {
+    font: inherit; font-size: 16px; font-weight: 500; color: var(--fg); background: var(--chip);
+    border: 0; border-radius: 14px; height: 46px; padding: 0 18px; cursor: pointer; transition: background .15s, transform .1s;
+  }
+  button:active { transform: scale(.97); background: var(--chip-on); }
+  button:focus-visible { outline: 2px solid var(--lv); outline-offset: 2px; }
+  .seg { display: flex; background: var(--chip); border-radius: 14px; padding: 3px; gap: 2px; }
+  .seg button { height: 40px; padding: 0 13px; background: transparent; color: var(--dim); border-radius: 11px; font-variant-numeric: tabular-nums; }
+  .seg button[aria-pressed="true"] { background: var(--chip-on); color: var(--fg); }
+  .actions { display: flex; gap: 8px; }
+  #zeroBtn { background: var(--fg); color: #05080b; font-weight: 600; }
+  #zeroBtn:active { background: #d3d9de; }
+  #resetBtn { background: transparent; color: var(--dim); padding: 0 12px; }
+
+  /* ---- start overlay ---- */
+  #start {
+    position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 14px; text-align: center; padding: 32px;
+    background: radial-gradient(100% 60% at 50% 30%, #12242d 0%, var(--bg) 75%);
+  }
+  #start svg { width: 76px; height: 76px; margin-bottom: 6px; }
+  #start h1 { margin: 0; font-size: 34px; font-weight: 600; letter-spacing: -.02em; }
+  #start p { margin: 0; max-width: 24em; color: var(--dim); font-size: 17px; line-height: 1.45; }
+  #start .go { margin-top: 12px; height: 54px; padding: 0 40px; font-size: 18px; font-weight: 600; border-radius: 27px; background: var(--fg); color: #05080b; }
+  #start small { color: var(--dim); font-size: 13px; opacity: .8; }
+  #msg { color: #ffc861; font-size: 15px; max-width: 26em; line-height: 1.4; }
+  #msg:empty { display: none; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (max-height: 640px) { .num { font-size: clamp(44px, 14vw, 62px); } .read .hint { font-size: 13px; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
 </style>
 </head>
 <body>
 <div id="app">
   <header>
-    <span id="modeLabel">Flat</span>
-    <span id="status">total tilt 0.0°</span>
+    <span class="pill" id="modePill">Flat</span>
+    <span class="pill" id="tiltPill"></span>
   </header>
 
-  <div id="stage">
-    <svg id="vis" viewBox="0 0 300 300" role="img" aria-label="Bubble level">
-      <!-- FLAT (circular vial) -->
+  <main id="stage">
+    <svg id="vis" viewBox="-10 -10 320 320" role="img" aria-label="Bubble level">
+      <defs>
+        <radialGradient id="gBody" cx=".5" cy=".38" r=".75">
+          <stop offset="0" stop-color="#13292e"/><stop offset=".6" stop-color="#0a171b"/><stop offset="1" stop-color="#050b0e"/>
+        </radialGradient>
+        <linearGradient id="gRim" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity=".10"/><stop offset="1" stop-color="#fff" stop-opacity=".30"/>
+        </linearGradient>
+        <linearGradient id="gGloss" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".7" stop-color="#fff" stop-opacity=".02"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+        <radialGradient id="gBub" cx=".36" cy=".3" r=".8">
+          <stop offset="0" stop-color="#ffffff"/><stop offset=".38" stop-color="#dbe7ff"/><stop offset="1" stop-color="#7e97c3"/>
+        </radialGradient>
+        <radialGradient id="gBubLv" cx=".36" cy=".3" r=".8">
+          <stop offset="0" stop-color="#f0fff9"/><stop offset=".38" stop-color="#8ff3d1"/><stop offset="1" stop-color="#1ea17a"/>
+        </radialGradient>
+        <radialGradient id="gHalo" cx=".5" cy=".5" r=".5">
+          <stop offset="0" stop-color="#52e6b4" stop-opacity="0"/><stop offset=".84" stop-color="#52e6b4" stop-opacity=".34"/><stop offset="1" stop-color="#52e6b4" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="fBlur" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="16"/></filter>
+        <clipPath id="clipFlat"><circle cx="150" cy="150" r="139"/></clipPath>
+        <clipPath id="clipTube"><rect x="11" y="95" width="278" height="110" rx="55"/></clipPath>
+      </defs>
+
+      <circle id="halo" cx="150" cy="150" r="170" fill="url(#gHalo)"/>
+
+      <!-- FLAT: circular vial -->
       <g id="flatG">
-        <circle cx="150" cy="150" r="140" fill="#0d1f14" stroke="#3a3a3c" stroke-width="3"/>
-        <circle cx="150" cy="150" r="93" fill="none" stroke="#2a3a2f" stroke-width="1.5"/>
-        <circle cx="150" cy="150" r="46" fill="none" stroke="#2a3a2f" stroke-width="1.5"/>
-        <line x1="10" y1="150" x2="290" y2="150" stroke="#2f4a37" stroke-width="1.5"/>
-        <line x1="150" y1="10" x2="150" y2="290" stroke="#2f4a37" stroke-width="1.5"/>
-        <circle cx="150" cy="150" r="24" fill="none" stroke="#5f8f6c" stroke-width="2"/>
-        <circle id="bubbleF" cx="150" cy="150" r="22" fill="rgba(255,214,10,.55)" stroke="#ffd60a" stroke-width="2.5"/>
+        <circle cx="150" cy="150" r="140" fill="url(#gBody)" stroke="url(#gRim)" stroke-width="2"/>
+        <g clip-path="url(#clipFlat)"><ellipse cx="150" cy="66" rx="112" ry="64" fill="url(#gGloss)"/></g>
+        <g id="ticks"></g>
+        <g stroke="rgba(255,255,255,.14)" stroke-width="1" fill="none">
+          <line x1="150" y1="14" x2="150" y2="112"/><line x1="150" y1="188" x2="150" y2="286"/>
+          <line x1="14" y1="150" x2="112" y2="150"/><line x1="188" y1="150" x2="286" y2="150"/>
+          <circle cx="150" cy="150" r="57"/><circle cx="150" cy="150" r="114"/>
+        </g>
+        <text id="lbl1" class="scale-t" x="210" y="146">5°</text>
+        <text id="lbl2" class="scale-t" x="267" y="146">10°</text>
+        <circle id="targetF" class="target" cx="150" cy="150" r="28" fill="none" stroke-width="1.6"/>
+        <g id="bubbleF" transform="translate(150 150)">
+          <circle r="22" fill="#000" opacity=".35" cy="3" />
+          <circle class="bub-n" r="22" fill="url(#gBub)"/>
+          <circle class="bub-lv" r="22" fill="url(#gBubLv)"/>
+          <ellipse cx="-7" cy="-9" rx="8" ry="5" fill="#fff" opacity=".55" transform="rotate(-30 -7 -9)"/>
+        </g>
       </g>
-      <!-- EDGE (tube vial) -->
+
+      <!-- EDGE: tube vial -->
       <g id="edgeG" class="hidden">
-        <rect id="tube" x="10" y="130" width="280" height="40" rx="20" fill="#0d1f14" stroke="#3a3a3c" stroke-width="3"/>
-        <line x1="150" y1="126" x2="150" y2="174" stroke="#5f8f6c" stroke-width="1.5" id="tickC"/>
-        <line x1="126" y1="134" x2="126" y2="166" stroke="#5f8f6c" stroke-width="2" id="tickL"/>
-        <line x1="174" y1="134" x2="174" y2="166" stroke="#5f8f6c" stroke-width="2" id="tickR"/>
-        <circle id="bubbleE" cx="150" cy="150" r="16" fill="rgba(255,214,10,.55)" stroke="#ffd60a" stroke-width="2.5"/>
+        <rect class="hglow" x="10" y="95" width="280" height="110" rx="55" fill="#52e6b4" opacity=".5" filter="url(#fBlur)"/>
+        <rect x="10" y="95" width="280" height="110" rx="55" fill="url(#gBody)" stroke="url(#gRim)" stroke-width="2"/>
+        <g clip-path="url(#clipTube)"><rect x="26" y="100" width="248" height="40" rx="20" fill="url(#gGloss)"/></g>
+        <line id="tickL" class="target" x1="110" y1="108" x2="110" y2="192" stroke-width="1.6"/>
+        <line id="tickR" class="target" x1="190" y1="108" x2="190" y2="192" stroke-width="1.6"/>
+        <g id="bubbleE" transform="translate(150 150)">
+          <ellipse rx="48" ry="36" cy="4" fill="#000" opacity=".35"/>
+          <ellipse class="bub-n" rx="48" ry="36" fill="url(#gBub)"/>
+          <ellipse class="bub-lv" rx="48" ry="36" fill="url(#gBubLv)"/>
+          <ellipse cx="-16" cy="-15" rx="18" ry="8" fill="#fff" opacity=".5"/>
+        </g>
       </g>
     </svg>
-  </div>
+  </main>
 
-  <div class="readouts">
-    <div class="box" id="boxA">
-      <div class="name" id="nameA">Left – Right</div>
-      <div class="val" id="valA">0.0°</div>
+  <section class="readouts" aria-label="Angles">
+    <div class="read" id="boxA">
+      <div class="cap" id="nameA">Left–right</div>
+      <div class="num"><span class="sg" id="sgA"></span><span id="vlA">0.0</span><span class="dg">°</span></div>
       <div class="hint" id="hintA">&nbsp;</div>
     </div>
-    <div class="box" id="boxB">
-      <div class="name" id="nameB">Front – Back</div>
-      <div class="val" id="valB">0.0°</div>
+    <div class="rule"></div>
+    <div class="read" id="boxB">
+      <div class="cap" id="nameB">Front–back</div>
+      <div class="num"><span class="sg" id="sgB"></span><span id="vlB">0.0</span><span class="dg">°</span></div>
       <div class="hint" id="hintB">&nbsp;</div>
     </div>
-  </div>
+  </section>
 
   <div class="controls">
-    <div class="seg" id="rangeSeg" aria-label="Bubble range">
-      <button data-r="2">±2°</button>
-      <button data-r="10" class="on">±10°</button>
-      <button data-r="30">±30°</button>
+    <div class="seg" id="rangeSeg" role="group" aria-label="Bubble range in degrees">
+      <button data-r="2" aria-pressed="false">±2°</button>
+      <button data-r="10" aria-pressed="true">±10°</button>
+      <button data-r="30" aria-pressed="false">±30°</button>
     </div>
-    <div class="row">
+    <div class="actions">
       <button id="zeroBtn">Zero</button>
       <button id="resetBtn">Reset</button>
     </div>
@@ -127,28 +221,33 @@
 </div>
 
 <div id="start">
-  <h1>Spirit Level</h1>
-  <p>Lay the phone flat on the surface you want to check, or stand it on an edge. The bubble and both angles update live.
-     Your browser will ask for permission to use motion sensors.</p>
-  <button class="primary" id="startBtn">Start</button>
-  <div id="msg"></div>
+  <svg viewBox="0 0 76 76" aria-hidden="true">
+    <rect x="3" y="21" width="70" height="34" rx="17" fill="#0a171b" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
+    <line x1="26" y1="28" x2="26" y2="48" stroke="rgba(255,255,255,.4)" stroke-width="2"/>
+    <line x1="50" y1="28" x2="50" y2="48" stroke="rgba(255,255,255,.4)" stroke-width="2"/>
+    <ellipse cx="38" cy="38" rx="11" ry="9" fill="#52e6b4"/>
+  </svg>
+  <h1>Level</h1>
+  <p>Lay your phone flat on a surface, or stand it on an edge. Tap Start and allow motion access.</p>
+  <button class="go" id="startBtn">Start</button>
+  <div id="msg" role="alert"></div>
+  <small>Readings stay on your phone.</small>
 </div>
+<div class="sr" id="sr" aria-live="polite"></div>
 
 <script>
 (function () {
   'use strict';
 
   var DEG = 180 / Math.PI, RAD = Math.PI / 180;
-  var LEVEL_EPS = 0.5;            // degrees: shown green when within this
-  var FLAT_ENTER = 0.80;          // |u.z| above this -> flat mode
-  var FLAT_EXIT  = 0.62;          // |u.z| below this -> leave flat mode (hysteresis)
+  var EPS_IN = 0.5, EPS_OUT = 0.8;       // degrees: enter / leave "level" (hysteresis)
+  var FLAT_ENTER = 0.75, FLAT_EXIT = 0.55;
+  var TRAVEL_F = 114, BR_F = 22;         // flat vial: bubble travel and radius
+  var TRAVEL_E = 86, BR_E = 48;         // tube vial
 
-  // ---------- state ----------
-  var u = null;                   // filtered "up" vector in device frame {x,y,z}
-  var flat = true;
-  var rangeDeg = 10;
-  var cal = { x: 0, y: 0 };       // flat calibration offsets (device frame, face-up only)
-  var lastEventAt = 0;
+  var u = null, flat = true, rangeDeg = 10, cal = { x: 0, y: 0 };
+  var lastEventAt = 0, levelA = false, levelB = false, wasLevel = false;
+  var bx = 0, by = 0;                    // smoothed bubble position (-1..1)
 
   function $(id) { return document.getElementById(id); }
 
@@ -168,23 +267,18 @@
   }
 
   // ---------- math ----------
-  // Gravity-up unit vector in the device frame from W3C Euler angles (beta, gamma).
-  // alpha (compass heading) does not influence it, so it is not needed.
+  // Up vector in the device frame from W3C Euler angles (alpha is irrelevant):
   // u = third row of Rz(a)·Rx(b)·Ry(g) = [-cos b sin g, sin b, cos b cos g]
   function upFromEuler(betaDeg, gammaDeg) {
     var b = betaDeg * RAD, g = gammaDeg * RAD;
     return { x: -Math.cos(b) * Math.sin(g), y: Math.sin(b), z: Math.cos(b) * Math.cos(g) };
   }
-
   function screenAngle() {
     var a = 0;
     if (screen.orientation && typeof screen.orientation.angle === 'number') a = screen.orientation.angle;
     else if (typeof window.orientation === 'number') a = window.orientation;
-    a = ((Math.round(a / 90) * 90) % 360 + 360) % 360;
-    return a;
+    return ((Math.round(a / 90) * 90) % 360 + 360) % 360;
   }
-
-  // Express the device-frame up vector in screen axes (x right, y up on the visible screen).
   function toScreen(v, angle) {
     switch (angle) {
       case 90:  return { x: -v.y, y:  v.x, z: v.z };
@@ -193,9 +287,9 @@
       default:  return { x:  v.x, y:  v.y, z: v.z };
     }
   }
-
   function asinDeg(x) { return Math.asin(Math.max(-1, Math.min(1, x))) * DEG; }
   function clamp(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
+  function hyst(prev, a) { return prev ? a < EPS_OUT : a < EPS_IN; }
 
   // ---------- sensor ----------
   function onOrientation(e) {
@@ -203,14 +297,11 @@
     lastEventAt = performance.now();
     var n = upFromEuler(e.beta, e.gamma);
     if (!u) { u = n; return; }
-    var k = 0.22;                              // low-pass factor
-    u.x += k * (n.x - u.x);
-    u.y += k * (n.y - u.y);
-    u.z += k * (n.z - u.z);
+    var k = 0.22;
+    u.x += k * (n.x - u.x); u.y += k * (n.y - u.y); u.z += k * (n.z - u.z);
     var m = Math.hypot(u.x, u.y, u.z) || 1;
     u.x /= m; u.y /= m; u.z /= m;
   }
-
   function startSensors() {
     window.addEventListener('deviceorientation', onOrientation, true);
     if (navigator.wakeLock && navigator.wakeLock.request) {
@@ -219,168 +310,174 @@
       document.addEventListener('visibilitychange', function () { if (!document.hidden) req(); });
     }
   }
-
   function requestAccess() {
-    var msg = $('msg');
-    msg.textContent = '';
+    var msg = $('msg'); msg.textContent = '';
     var DOE = window.DeviceOrientationEvent;
-    if (!DOE) { msg.textContent = 'This browser does not provide motion sensors.'; return; }
-
+    if (!DOE) { msg.textContent = 'This browser has no motion sensors.'; return; }
     var proceed = function () {
       $('start').classList.add('hidden');
       startSensors();
       setTimeout(function () {
         if (!lastEventAt) {
           $('start').classList.remove('hidden');
-          msg.textContent = 'No sensor data received. Open this page over HTTPS on a phone (desktop computers have no tilt sensor).';
+          msg.textContent = 'No motion data arrived. Open this page over HTTPS on a phone; computers have no tilt sensor.';
         }
       }, 1500);
     };
-
     if (typeof DOE.requestPermission === 'function') {
       DOE.requestPermission().then(function (state) {
         if (state === 'granted') proceed();
-        else msg.textContent = 'Motion access was denied. On iPhone: Settings → Safari → Advanced → Website Data (remove this site), or fully close Safari, then reload and tap Start again.';
+        else msg.textContent = 'Motion access is off. Quit Safari, reopen this page and tap Start again. If that fails, clear this site under Settings, Safari, Advanced, Website Data.';
       }).catch(function (err) {
-        msg.textContent = 'Could not request motion access (' + (err && err.message ? err.message : err) + '). The page must be served over HTTPS.';
+        msg.textContent = 'Could not ask for motion access (' + (err && err.message ? err.message : err) + '). The page must be served over HTTPS.';
       });
-    } else {
-      proceed();
+    } else proceed();
+  }
+
+  // ---------- scale furniture ----------
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function buildTicks() {
+    var g = $('ticks');
+    for (var i = 0; i < 72; i++) {
+      var a = i * 5 * RAD, major = i % 18 === 0, mid = i % 6 === 0;
+      var r1 = 133, r0 = major ? 123 : (mid ? 126 : 129);
+      var l = document.createElementNS(SVGNS, 'line');
+      l.setAttribute('x1', (150 + r0 * Math.sin(a)).toFixed(2)); l.setAttribute('y1', (150 - r0 * Math.cos(a)).toFixed(2));
+      l.setAttribute('x2', (150 + r1 * Math.sin(a)).toFixed(2)); l.setAttribute('y2', (150 - r1 * Math.cos(a)).toFixed(2));
+      l.setAttribute('stroke', 'rgba(255,255,255,' + (major ? .5 : mid ? .28 : .14) + ')');
+      l.setAttribute('stroke-width', major ? '1.6' : '1');
+      g.appendChild(l);
     }
+  }
+  function layoutScale() {
+    var tf = BR_F + 3 + (EPS_IN / rangeDeg) * TRAVEL_F;
+    $('targetF').setAttribute('r', tf.toFixed(1));
+    var te = BR_E + 4 + (EPS_IN / rangeDeg) * TRAVEL_E;
+    $('tickL').setAttribute('x1', (150 - te).toFixed(1)); $('tickL').setAttribute('x2', (150 - te).toFixed(1));
+    $('tickR').setAttribute('x1', (150 + te).toFixed(1)); $('tickR').setAttribute('x2', (150 + te).toFixed(1));
+    $('lbl1').textContent = (rangeDeg / 2) + '°';
+    $('lbl2').textContent = rangeDeg + '°';
+    $('lbl1').setAttribute('x', (150 + TRAVEL_F / 2 + 3));
+    $('lbl2').setAttribute('x', (150 + TRAVEL_F + 3));
   }
 
   // ---------- rendering ----------
-  var elBubbleF = $('bubbleF'), elBubbleE = $('bubbleE');
-  var lastTextAt = 0;
-
-  function fmt(deg) {
-    var a = Math.abs(deg);
-    var s = a.toFixed(1);
-    if (s === '0.0') return '0.0°';
-    return (deg < 0 ? '−' : '+') + s + '°';
+  var lastTextAt = 0, lastMode = '';
+  function setNum(sg, vl, v) {
+    var s = Math.abs(v).toFixed(1);
+    $(sg).textContent = s === '0.0' ? '' : (v < 0 ? '−' : '+');
+    $(vl).textContent = s;
   }
-
   function setMode(isFlat) {
     flat = isFlat;
     $('flatG').classList.toggle('hidden', !isFlat);
     $('edgeG').classList.toggle('hidden', isFlat);
-    $('vis').classList.toggle('edge', !isFlat);
-    $('vis').setAttribute('viewBox', isFlat ? '0 0 300 300' : '0 0 300 300');
+    $('halo').classList.toggle('hidden', !isFlat);
+  }
+  function hintLR(d) { return Math.abs(d) < 0.05 ? '' : (d > 0 ? 'right side higher' : 'left side higher'); }
+  function hintFB(d) { return Math.abs(d) < 0.05 ? '' : (d > 0 ? 'top edge higher' : 'bottom edge higher'); }
+  function arrowLR(d) { return Math.abs(d) < 0.05 ? '' : (d > 0 ? '→ ' : '← '); }
+  function arrowFB(d) { return Math.abs(d) < 0.05 ? '' : (d > 0 ? '↑ ' : '↓ '); }
+  function setHint(id, lvl, arrow, text) {
+    $(id).textContent = lvl ? 'Level' : (arrow + text || ' ');
+  }
+  function setLabels(mode, a, b) {
+    var key = mode + '|' + a + '|' + b;
+    if (key === lastMode) return;
+    lastMode = key;
+    $('modePill').textContent = mode; $('nameA').textContent = a; $('nameB').textContent = b;
   }
 
   function frame(now) {
     requestAnimationFrame(frame);
     if (!u) return;
 
-    // mode with hysteresis
     var az = Math.abs(u.z);
     if (flat && az < FLAT_EXIT) setMode(false);
     else if (!flat && az > FLAT_ENTER) setMode(true);
 
     var v = { x: u.x, y: u.y, z: u.z };
     var faceDown = v.z < 0;
-
-    if (flat && !faceDown) {            // apply zero offset (face-up flat only)
+    if (flat && !faceDown) {
       v.x -= cal.x; v.y -= cal.y;
-      var rest = 1 - v.x * v.x - v.y * v.y;
-      v.z = Math.sqrt(Math.max(0, rest));
+      v.z = Math.sqrt(Math.max(0, 1 - v.x * v.x - v.y * v.y));
     }
-
     var s = toScreen(v, screenAngle());
-    var total = Math.acos(clamp(Math.abs(v.z), 0, 1)) * DEG;   // angle between screen normal and vertical
-    var A, B, aLevel, bLevel;
+    var total = Math.acos(clamp(Math.abs(v.z), 0, 1)) * DEG;
+    var A, B, tx, ty, horizX = true;
 
     if (flat) {
-      // Inclination of each screen axis relative to horizontal.
-      // x: + means right edge higher; y: + means top edge higher.
-      var ax = asinDeg(s.x), ay = asinDeg(s.y);
-      var vec = Math.hypot(ax, ay) / rangeDeg;
-      var fx = ax / rangeDeg, fy = ay / rangeDeg;
-      if (vec > 1) { fx /= vec; fy /= vec; }
-      var travel = 140 - 22 - 3;
-      // bubble drifts toward the higher side, like a real one
-      elBubbleF.setAttribute('cx', (150 + fx * travel).toFixed(1));
-      elBubbleF.setAttribute('cy', (150 - fy * travel).toFixed(1));
-      A = ax; B = ay;
-      aLevel = Math.abs(ax) < LEVEL_EPS; bLevel = Math.abs(ay) < LEVEL_EPS;
-      setLabels('Flat' + (faceDown ? ' · face down (mirrored)' : ''), 'Left – Right', 'Front – Back');
-      if (now - lastTextAt > 90) {
-        $('hintA').textContent = hintLR(ax);
-        $('hintB').textContent = hintFB(ay);
-      }
+      A = asinDeg(s.x); B = asinDeg(s.y);                // + right higher / + top higher
+      var mag = Math.hypot(A, B) / rangeDeg;
+      tx = A / rangeDeg; ty = B / rangeDeg;
+      if (mag > 1) { tx /= mag; ty /= mag; }
+      setLabels(faceDown ? 'Flat, face down' : 'Flat', 'Left–right', 'Front–back');
     } else {
-      // On edge: horizontal edge incline. Pick the screen axis that is horizontal in the world.
-      var horizX = Math.abs(s.y) >= Math.abs(s.x);   // gravity mostly along screen Y -> horizontal edge runs along X
-      var tilt, tx = 0, ty = 0;
-      if (horizX) {
-        tilt = Math.atan2(s.x, Math.abs(s.y)) * DEG;  // + right higher
-      } else {
-        tilt = Math.atan2(s.y, Math.abs(s.x)) * DEG;  // + top higher
-      }
-      var f = clamp(tilt / rangeDeg, -1, 1);
-      var tr = 140 - 16 - 6;
+      horizX = Math.abs(s.y) >= Math.abs(s.x);
+      A = horizX ? Math.atan2(s.x, Math.abs(s.y)) * DEG : Math.atan2(s.y, Math.abs(s.x)) * DEG;
+      B = asinDeg(v.z);                                  // + screen faces up
+      tx = clamp(A / rangeDeg, -1, 1); ty = 0;
+      setLabels('On edge', horizX ? 'Left–right' : 'Top–bottom', 'Screen lean');
+    }
+
+    levelA = hyst(levelA, Math.abs(A));
+    levelB = flat ? hyst(levelB, Math.abs(B)) : false;
+    var isLevel = flat ? (levelA && levelB) : levelA;
+
+    // bubble: ease toward target for a liquid feel
+    bx += (tx - bx) * 0.4; by += (ty - by) * 0.4;
+    if (flat) {
+      $('bubbleF').setAttribute('transform', 'translate(' + (150 + bx * TRAVEL_F).toFixed(2) + ' ' + (150 - by * TRAVEL_F).toFixed(2) + ')');
+    } else {
       $('edgeG').setAttribute('transform', horizX ? '' : 'rotate(-90 150 150)');
-      // rotate(-90): local +x maps to screen up, so f>0 (top higher) moves bubble up. Correct.
-      elBubbleE.setAttribute('cx', (150 + f * tr).toFixed(1));
-      A = tilt;
-      B = asinDeg(v.z);                  // + screen faces up, − faces down (lean)
-      aLevel = Math.abs(A) < LEVEL_EPS; bLevel = false;
-      setLabels(horizX ? 'On edge · horizontal' : 'On edge · vertical axis', horizX ? 'Level (left–right)' : 'Level (top–bottom)', 'Lean of screen');
-      if (now - lastTextAt > 90) {
-        $('hintA').textContent = horizX ? hintLR(tilt) : hintFB(tilt);
-        $('hintB').textContent = B > 0.05 ? 'screen faces up' : (B < -0.05 ? 'screen faces down' : 'screen vertical');
-      }
+      $('bubbleE').setAttribute('transform', 'translate(' + (150 + bx * TRAVEL_E).toFixed(2) + ' 150)');
     }
 
-    var isLevel = flat ? (aLevel && bLevel) : aLevel;
-    var col = isLevel ? '#30d158' : '#ffd60a';
-    var bub = flat ? elBubbleF : elBubbleE;
-    bub.setAttribute('stroke', col);
-    bub.setAttribute('fill', isLevel ? 'rgba(48,209,88,.55)' : 'rgba(255,214,10,.55)');
-    $('boxA').classList.toggle('ok', aLevel);
-    $('boxB').classList.toggle('ok', bLevel);
+    if (isLevel !== wasLevel) {
+      wasLevel = isLevel;
+      document.body.classList.toggle('is-level', isLevel);
+      $('sr').textContent = isLevel ? 'Level' : '';
+    }
+    $('boxA').classList.toggle('ok', levelA);
+    $('boxB').classList.toggle('ok', levelB);
 
-    if (now - lastTextAt > 90) {   // throttle numbers so they stay readable
+    if (now - lastTextAt > 90) {
       lastTextAt = now;
-      $('valA').textContent = fmt(A);
-      $('valB').textContent = fmt(B);
-      $('status').textContent = 'total tilt ' + total.toFixed(1) + '°';
+      setNum('sgA', 'vlA', A); setNum('sgB', 'vlB', B);
+      if (flat) {
+        setHint('hintA', levelA, arrowLR(A), hintLR(A));
+        setHint('hintB', levelB, arrowFB(B), hintFB(B));
+      } else {
+        setHint('hintA', levelA, horizX ? arrowLR(A) : arrowFB(A), horizX ? hintLR(A) : hintFB(A));
+        $('hintB').textContent = B > 0.05 ? 'screen faces up' : (B < -0.05 ? 'screen faces down' : 'screen upright');
+      }
+      var tp = $('tiltPill');
+      if (isLevel) tp.textContent = '✓ Level';
+      else if (flat) tp.innerHTML = 'Slope <b>' + total.toFixed(1) + '°</b> (' + (Math.tan(total * RAD) * 100).toFixed(1) + '%)';
+      else tp.textContent = '';
     }
-  }
-
-  function hintLR(d) { return Math.abs(d) < 0.05 ? 'level' : (d > 0 ? 'right side higher' : 'left side higher'); }
-  function hintFB(d) { return Math.abs(d) < 0.05 ? 'level' : (d > 0 ? 'top edge higher' : 'bottom edge higher'); }
-
-  var lastLabels = '';
-  function setLabels(mode, a, b) {
-    var key = mode + '|' + a + '|' + b;
-    if (key === lastLabels) return;
-    lastLabels = key;
-    $('modeLabel').textContent = mode;
-    $('nameA').textContent = a;
-    $('nameB').textContent = b;
   }
 
   // ---------- controls ----------
-  function syncRangeButtons() {
+  function syncRange() {
     var bs = document.querySelectorAll('#rangeSeg button');
-    for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', parseFloat(bs[i].dataset.r) === rangeDeg);
+    for (var i = 0; i < bs.length; i++) bs[i].setAttribute('aria-pressed', parseFloat(bs[i].dataset.r) === rangeDeg ? 'true' : 'false');
+    layoutScale();
   }
   $('rangeSeg').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
-    rangeDeg = parseFloat(b.dataset.r); save(); syncRangeButtons();
+    rangeDeg = parseFloat(b.dataset.r); save(); syncRange();
   });
   $('zeroBtn').addEventListener('click', function () {
-    if (!u || !flat || u.z < 0) { alert('Zero works with the phone lying flat, screen up. Put it on the surface you consider level and tap Zero.'); return; }
+    if (!u || !flat || u.z < 0) { alert('Lay the phone flat, screen up, on the surface you want as zero. Then tap Zero.'); return; }
     cal = { x: u.x, y: u.y }; save();
   });
   $('resetBtn').addEventListener('click', function () { cal = { x: 0, y: 0 }; save(); });
   $('startBtn').addEventListener('click', requestAccess);
 
-  // test hook (used by automated tests; harmless otherwise)
   window.__level = { upFromEuler: upFromEuler, toScreen: toScreen, onOrientation: onOrientation };
 
-  load(); syncRangeButtons();
+  buildTicks(); load(); syncRange();
   requestAnimationFrame(frame);
 })();
 </script>
