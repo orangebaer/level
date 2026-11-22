@@ -3,116 +3,107 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#05080b">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#dee5e5">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Level">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <title>Level</title>
 <style>
+  /* Palette: Ebony, Alabaster Grey, Muted Teal, Mint Leaf, Rosewood, plus black and white for text.
+     Black text passes 4.5:1 on Alabaster (17:1), Teal (11:1), Mint (8.3:1) and Rosewood (4.7:1).
+     White text is used on Ebony (6.2:1). Mint = level, Rosewood = not level; the state is
+     also always spelled out in text, never colour alone. */
   :root {
-    --bg: #05080b;
-    --glow: #0f1b24;
-    --fg: #f3f6f8;
-    --dim: #98a3ad;
-    --hair: rgba(255, 255, 255, .10);
-    --chip: rgba(255, 255, 255, .07);
-    --chip-on: rgba(255, 255, 255, .16);
-    --lv: #52e6b4;
+    --text: #000;
+    --ink: #5f634f;      /* Ebony: outlines, ticks, filled buttons */
+    --bg: #dee5e5;       /* Alabaster Grey */
+    --teal: #9dc5bb;     /* Muted Teal */
+    --mint: #17b890;     /* Mint Leaf */
+    --rose: #b15e6c;     /* Rosewood */
     --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; height: 100%; background: var(--bg); }
   body {
-    color: var(--fg); font-family: var(--font); overflow: hidden; touch-action: manipulation;
+    color: var(--text); font-family: var(--font); overflow: hidden; touch-action: manipulation;
     -webkit-user-select: none; user-select: none; -webkit-font-smoothing: antialiased;
-    background:
-      radial-gradient(120% 60% at 50% 0%, var(--glow) 0%, rgba(15, 27, 36, 0) 70%),
-      var(--bg);
   }
-
   #app {
-    height: 100vh; height: 100dvh; display: flex; flex-direction: column; gap: 8px;
+    height: 100vh; height: 100dvh; display: flex; flex-direction: column; gap: 10px;
     padding: max(env(safe-area-inset-top), 10px) max(env(safe-area-inset-right), 18px)
-             max(env(safe-area-inset-bottom), 12px) max(env(safe-area-inset-left), 18px);
+             max(env(safe-area-inset-bottom), 14px) max(env(safe-area-inset-left), 18px);
   }
 
   /* ---- top pills ---- */
   header { display: flex; justify-content: space-between; align-items: center; min-height: 34px; }
   .pill {
-    display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 13px;
-    border-radius: 15px; background: var(--chip); color: var(--dim);
-    font-size: 14px; font-weight: 500; letter-spacing: .01em; font-variant-numeric: tabular-nums;
-    transition: color .3s, background .3s;
+    display: inline-flex; align-items: center; height: 32px; padding: 0 14px; border-radius: 16px;
+    border: 2px solid var(--ink); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums;
   }
   .pill:empty { visibility: hidden; }
-  .pill b { color: var(--fg); font-weight: 600; }
-  body.is-level #tiltPill { color: var(--lv); background: rgba(82, 230, 180, .12); }
+  body.is-level #tiltPill { background: var(--mint); }
 
   /* ---- instrument ---- */
   #stage { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
   svg#vis { height: 100%; max-height: 100%; width: auto; max-width: 100%; aspect-ratio: 1 / 1; overflow: visible; }
-  #halo, .hglow { opacity: 0; transition: opacity .4s ease; }
-  body.is-level #halo { opacity: 1; }
-  body.is-level .hglow { opacity: .55; }
-  .bub-lv { opacity: 0; transition: opacity .25s ease; }
-  body.is-level .bub-lv { opacity: 1; }
-  .bub-n { transition: opacity .25s ease; }
-  body.is-level .bub-n { opacity: 0; }
-  .target { stroke: rgba(255, 255, 255, .38); transition: stroke .3s; }
-  body.is-level .target { stroke: var(--lv); }
-  .scale-t { fill: rgba(255, 255, 255, .42); font: 500 8.5px var(--font); }
+  .vial { fill: var(--teal); stroke: var(--ink); stroke-width: 3; }
+  .lvring { fill: none; stroke: var(--mint); stroke-width: 9; opacity: 0; transition: opacity .2s; }
+  body.is-level .lvring { opacity: 1; }
+  .grid line, .grid circle { fill: none; stroke: var(--ink); stroke-opacity: .5; stroke-width: 1.2; }
+  .target { fill: none; stroke: var(--ink); stroke-width: 2.5; }
+  .bubble { fill: var(--rose); stroke: var(--ink); stroke-width: 3; transition: fill .2s; }
+  body.is-level .bubble { fill: var(--mint); }
+  .chip { fill: var(--bg); }
+  .scale-t { fill: var(--text); font: 700 9.5px var(--font); text-anchor: middle; }
   .hidden { display: none !important; }
 
   /* ---- readouts ---- */
-  .readouts { display: grid; grid-template-columns: 1fr 1px 1fr; align-items: stretch; padding-top: 2px; }
-  .readouts .rule { background: var(--hair); margin: 6px 0; }
+  .readouts { display: grid; grid-template-columns: 1fr 2px 1fr; align-items: stretch; }
+  .readouts .rule { background: var(--teal); margin: 8px 0; border-radius: 1px; }
   .read { text-align: center; padding: 0 4px; min-width: 0; }
-  .read .cap { font-size: 15px; font-weight: 500; color: var(--dim); }
+  .read .cap { font-size: 15px; font-weight: 600; }
   .num {
     display: flex; justify-content: center; align-items: baseline; white-space: nowrap;
-    font-size: clamp(52px, 17vw, 78px); font-weight: 200; letter-spacing: -.035em; line-height: 1.04;
-    font-variant-numeric: tabular-nums; transition: color .25s;
+    font-size: clamp(52px, 17vw, 78px); font-weight: 500; letter-spacing: -.035em; line-height: 1.04;
+    font-variant-numeric: tabular-nums;
   }
-  .num .sg { display: inline-block; width: .5em; text-align: right; color: var(--dim); font-weight: 200; }
-  .num .dg { font-size: .42em; font-weight: 300; color: var(--dim); margin-left: .08em; align-self: flex-start; padding-top: .2em; letter-spacing: 0; }
-  .read.ok .num { color: var(--lv); }
-  .read .hint { min-height: 1.4em; font-size: 14px; font-weight: 500; color: var(--dim); display: flex; justify-content: center; align-items: center; gap: 5px; }
-  .read.ok .hint { color: var(--lv); }
-  .arrow { font-size: 15px; line-height: 1; }
+  .num .sg { display: inline-block; width: .66em; text-align: right; padding-right: .04em; }
+  .num .dg { font-size: .42em; font-weight: 500; margin-left: .08em; align-self: flex-start; padding-top: .2em; letter-spacing: 0; }
+  .read .hint { width: fit-content; margin: 2px auto 0; min-height: 28px; padding: 0 12px; border-radius: 14px; font-size: 14px; font-weight: 600; display: flex; align-items: center; }
+  .hint.off { background: var(--rose); }
+  .hint.lv { background: var(--mint); }
 
   /* ---- controls ---- */
-  .controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 6px; }
+  .controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 4px; }
   button {
-    font: inherit; font-size: 16px; font-weight: 500; color: var(--fg); background: var(--chip);
-    border: 0; border-radius: 14px; height: 46px; padding: 0 18px; cursor: pointer; transition: background .15s, transform .1s;
+    font: inherit; font-size: 16px; font-weight: 600; color: var(--text); background: transparent;
+    border: 2px solid var(--ink); border-radius: 12px; height: 46px; padding: 0 18px; cursor: pointer;
   }
-  button:active { transform: scale(.97); background: var(--chip-on); }
-  button:focus-visible { outline: 2px solid var(--lv); outline-offset: 2px; }
-  .seg { display: flex; background: var(--chip); border-radius: 14px; padding: 3px; gap: 2px; }
-  .seg button { height: 40px; padding: 0 13px; background: transparent; color: var(--dim); border-radius: 11px; font-variant-numeric: tabular-nums; }
-  .seg button[aria-pressed="true"] { background: var(--chip-on); color: var(--fg); }
+  button:active { transform: scale(.97); }
+  button:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .seg { display: flex; border: 2px solid var(--ink); border-radius: 12px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; height: 38px; padding: 0 12px; border-radius: 8px; font-variant-numeric: tabular-nums; }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
   .actions { display: flex; gap: 8px; }
-  #zeroBtn { background: var(--fg); color: #05080b; font-weight: 600; }
-  #zeroBtn:active { background: #d3d9de; }
-  #resetBtn { background: transparent; color: var(--dim); padding: 0 12px; }
+  #zeroBtn { background: var(--ink); color: #fff; }
+  #resetBtn { padding: 0 14px; }
 
   /* ---- start overlay ---- */
   #start {
     position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 14px; text-align: center; padding: 32px;
-    background: radial-gradient(100% 60% at 50% 30%, #12242d 0%, var(--bg) 75%);
+    justify-content: center; gap: 14px; text-align: center; padding: 32px; background: var(--bg);
   }
-  #start svg { width: 76px; height: 76px; margin-bottom: 6px; }
-  #start h1 { margin: 0; font-size: 34px; font-weight: 600; letter-spacing: -.02em; }
-  #start p { margin: 0; max-width: 24em; color: var(--dim); font-size: 17px; line-height: 1.45; }
-  #start .go { margin-top: 12px; height: 54px; padding: 0 40px; font-size: 18px; font-weight: 600; border-radius: 27px; background: var(--fg); color: #05080b; }
-  #start small { color: var(--dim); font-size: 13px; opacity: .8; }
-  #msg { color: #ffc861; font-size: 15px; max-width: 26em; line-height: 1.4; }
+  #start svg { width: 84px; height: 84px; margin-bottom: 6px; }
+  #start h1 { margin: 0; font-size: 36px; font-weight: 700; letter-spacing: -.02em; }
+  #start p { margin: 0; max-width: 24em; font-size: 17px; line-height: 1.45; }
+  #start .go { margin-top: 12px; height: 54px; padding: 0 44px; font-size: 18px; border-radius: 27px; background: var(--ink); color: #fff; }
+  #start small { font-size: 13px; font-weight: 500; }
+  #msg { max-width: 26em; font-size: 15px; line-height: 1.4; text-align: left; padding: 10px 14px; border-left: 5px solid var(--rose); background: var(--teal); border-radius: 4px; }
   #msg:empty { display: none; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
@@ -129,66 +120,29 @@
 
   <main id="stage">
     <svg id="vis" viewBox="-10 -10 320 320" role="img" aria-label="Bubble level">
-      <defs>
-        <radialGradient id="gBody" cx=".5" cy=".38" r=".75">
-          <stop offset="0" stop-color="#13292e"/><stop offset=".6" stop-color="#0a171b"/><stop offset="1" stop-color="#050b0e"/>
-        </radialGradient>
-        <linearGradient id="gRim" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity=".10"/><stop offset="1" stop-color="#fff" stop-opacity=".30"/>
-        </linearGradient>
-        <linearGradient id="gGloss" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".7" stop-color="#fff" stop-opacity=".02"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
-        </linearGradient>
-        <radialGradient id="gBub" cx=".36" cy=".3" r=".8">
-          <stop offset="0" stop-color="#ffffff"/><stop offset=".38" stop-color="#dbe7ff"/><stop offset="1" stop-color="#7e97c3"/>
-        </radialGradient>
-        <radialGradient id="gBubLv" cx=".36" cy=".3" r=".8">
-          <stop offset="0" stop-color="#f0fff9"/><stop offset=".38" stop-color="#8ff3d1"/><stop offset="1" stop-color="#1ea17a"/>
-        </radialGradient>
-        <radialGradient id="gHalo" cx=".5" cy=".5" r=".5">
-          <stop offset="0" stop-color="#52e6b4" stop-opacity="0"/><stop offset=".84" stop-color="#52e6b4" stop-opacity=".34"/><stop offset="1" stop-color="#52e6b4" stop-opacity="0"/>
-        </radialGradient>
-        <filter id="fBlur" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="16"/></filter>
-        <clipPath id="clipFlat"><circle cx="150" cy="150" r="139"/></clipPath>
-        <clipPath id="clipTube"><rect x="11" y="95" width="278" height="110" rx="55"/></clipPath>
-      </defs>
-
-      <circle id="halo" cx="150" cy="150" r="170" fill="url(#gHalo)"/>
-
       <!-- FLAT: circular vial -->
       <g id="flatG">
-        <circle cx="150" cy="150" r="140" fill="url(#gBody)" stroke="url(#gRim)" stroke-width="2"/>
-        <g clip-path="url(#clipFlat)"><ellipse cx="150" cy="66" rx="112" ry="64" fill="url(#gGloss)"/></g>
+        <circle class="lvring" cx="150" cy="150" r="148"/>
+        <circle class="vial" cx="150" cy="150" r="140"/>
         <g id="ticks"></g>
-        <g stroke="rgba(255,255,255,.14)" stroke-width="1" fill="none">
+        <g class="grid">
           <line x1="150" y1="14" x2="150" y2="112"/><line x1="150" y1="188" x2="150" y2="286"/>
           <line x1="14" y1="150" x2="112" y2="150"/><line x1="188" y1="150" x2="286" y2="150"/>
           <circle cx="150" cy="150" r="57"/><circle cx="150" cy="150" r="114"/>
         </g>
-        <text id="lbl1" class="scale-t" x="210" y="146">5°</text>
-        <text id="lbl2" class="scale-t" x="267" y="146">10°</text>
-        <circle id="targetF" class="target" cx="150" cy="150" r="28" fill="none" stroke-width="1.6"/>
-        <g id="bubbleF" transform="translate(150 150)">
-          <circle r="22" fill="#000" opacity=".35" cy="3" />
-          <circle class="bub-n" r="22" fill="url(#gBub)"/>
-          <circle class="bub-lv" r="22" fill="url(#gBubLv)"/>
-          <ellipse cx="-7" cy="-9" rx="8" ry="5" fill="#fff" opacity=".55" transform="rotate(-30 -7 -9)"/>
-        </g>
+        <g id="lbl1g"><rect class="chip" id="chip1" height="15" rx="7.5"/><text class="scale-t" id="lbl1"></text></g>
+        <g id="lbl2g"><rect class="chip" id="chip2" height="15" rx="7.5"/><text class="scale-t" id="lbl2"></text></g>
+        <circle id="targetF" class="target" cx="150" cy="150" r="28"/>
+        <g id="bubbleF" transform="translate(150 150)"><circle class="bubble" r="22"/></g>
       </g>
 
       <!-- EDGE: tube vial -->
       <g id="edgeG" class="hidden">
-        <rect class="hglow" x="10" y="95" width="280" height="110" rx="55" fill="#52e6b4" opacity=".5" filter="url(#fBlur)"/>
-        <rect x="10" y="95" width="280" height="110" rx="55" fill="url(#gBody)" stroke="url(#gRim)" stroke-width="2"/>
-        <g clip-path="url(#clipTube)"><rect x="26" y="100" width="248" height="40" rx="20" fill="url(#gGloss)"/></g>
-        <line id="tickL" class="target" x1="110" y1="108" x2="110" y2="192" stroke-width="1.6"/>
-        <line id="tickR" class="target" x1="190" y1="108" x2="190" y2="192" stroke-width="1.6"/>
-        <g id="bubbleE" transform="translate(150 150)">
-          <ellipse rx="48" ry="36" cy="4" fill="#000" opacity=".35"/>
-          <ellipse class="bub-n" rx="48" ry="36" fill="url(#gBub)"/>
-          <ellipse class="bub-lv" rx="48" ry="36" fill="url(#gBubLv)"/>
-          <ellipse cx="-16" cy="-15" rx="18" ry="8" fill="#fff" opacity=".5"/>
-        </g>
+        <rect class="lvring" x="3" y="88" width="294" height="124" rx="62"/>
+        <rect class="vial" x="10" y="95" width="280" height="110" rx="55"/>
+        <line id="tickL" class="target" x1="110" y1="108" x2="110" y2="192"/>
+        <line id="tickR" class="target" x1="190" y1="108" x2="190" y2="192"/>
+        <g id="bubbleE" transform="translate(150 150)"><ellipse class="bubble" rx="48" ry="36"/></g>
       </g>
     </svg>
   </main>
@@ -221,11 +175,11 @@
 </div>
 
 <div id="start">
-  <svg viewBox="0 0 76 76" aria-hidden="true">
-    <rect x="3" y="21" width="70" height="34" rx="17" fill="#0a171b" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
-    <line x1="26" y1="28" x2="26" y2="48" stroke="rgba(255,255,255,.4)" stroke-width="2"/>
-    <line x1="50" y1="28" x2="50" y2="48" stroke="rgba(255,255,255,.4)" stroke-width="2"/>
-    <ellipse cx="38" cy="38" rx="11" ry="9" fill="#52e6b4"/>
+  <svg viewBox="0 0 84 84" aria-hidden="true">
+    <rect x="3" y="22" width="78" height="40" rx="20" fill="#9dc5bb" stroke="#5f634f" stroke-width="3"/>
+    <line x1="23" y1="29" x2="23" y2="55" stroke="#5f634f" stroke-width="2.5"/>
+    <line x1="61" y1="29" x2="61" y2="55" stroke="#5f634f" stroke-width="2.5"/>
+    <ellipse cx="42" cy="42" rx="12" ry="10" fill="#17b890" stroke="#5f634f" stroke-width="3"/>
   </svg>
   <h1>Level</h1>
   <p>Lay your phone flat on a surface, or stand it on an edge. Tap Start and allow motion access.</p>
@@ -243,7 +197,7 @@
   var EPS_IN = 0.5, EPS_OUT = 0.8;       // degrees: enter / leave "level" (hysteresis)
   var FLAT_ENTER = 0.75, FLAT_EXIT = 0.55;
   var TRAVEL_F = 114, BR_F = 22;         // flat vial: bubble travel and radius
-  var TRAVEL_E = 86, BR_E = 48;         // tube vial
+  var TRAVEL_E = 86, BR_E = 48;          // tube vial
 
   var u = null, flat = true, rangeDeg = 10, cal = { x: 0, y: 0 };
   var lastEventAt = 0, levelA = false, levelB = false, wasLevel = false;
@@ -340,14 +294,22 @@
     var g = $('ticks');
     for (var i = 0; i < 72; i++) {
       var a = i * 5 * RAD, major = i % 18 === 0, mid = i % 6 === 0;
-      var r1 = 133, r0 = major ? 123 : (mid ? 126 : 129);
+      var r1 = 133, r0 = major ? 122 : (mid ? 126 : 129);
       var l = document.createElementNS(SVGNS, 'line');
       l.setAttribute('x1', (150 + r0 * Math.sin(a)).toFixed(2)); l.setAttribute('y1', (150 - r0 * Math.cos(a)).toFixed(2));
       l.setAttribute('x2', (150 + r1 * Math.sin(a)).toFixed(2)); l.setAttribute('y2', (150 - r1 * Math.cos(a)).toFixed(2));
-      l.setAttribute('stroke', 'rgba(255,255,255,' + (major ? .5 : mid ? .28 : .14) + ')');
-      l.setAttribute('stroke-width', major ? '1.6' : '1');
+      l.setAttribute('stroke', '#5f634f');
+      l.setAttribute('stroke-width', major ? '2.4' : (mid ? '1.6' : '1'));
       g.appendChild(l);
     }
+  }
+  // label chip centred on the lower-right diagonal, where it crosses no axis line
+  function placeChip(n, r, text) {
+    var c = r * Math.SQRT1_2, cx = 150 + c, cy = 150 + c;
+    var w = text.length * 6.6 + 12;
+    var t = $('lbl' + n), chip = $('chip' + n);
+    t.textContent = text; t.setAttribute('x', cx.toFixed(1)); t.setAttribute('y', (cy + 3.4).toFixed(1));
+    chip.setAttribute('x', (cx - w / 2).toFixed(1)); chip.setAttribute('y', (cy - 7.5).toFixed(1)); chip.setAttribute('width', w.toFixed(1));
   }
   function layoutScale() {
     var tf = BR_F + 3 + (EPS_IN / rangeDeg) * TRAVEL_F;
@@ -355,10 +317,8 @@
     var te = BR_E + 4 + (EPS_IN / rangeDeg) * TRAVEL_E;
     $('tickL').setAttribute('x1', (150 - te).toFixed(1)); $('tickL').setAttribute('x2', (150 - te).toFixed(1));
     $('tickR').setAttribute('x1', (150 + te).toFixed(1)); $('tickR').setAttribute('x2', (150 + te).toFixed(1));
-    $('lbl1').textContent = (rangeDeg / 2) + '°';
-    $('lbl2').textContent = rangeDeg + '°';
-    $('lbl1').setAttribute('x', (150 + TRAVEL_F / 2 + 3));
-    $('lbl2').setAttribute('x', (150 + TRAVEL_F + 3));
+    placeChip(1, TRAVEL_F / 2, (rangeDeg / 2) + '°');
+    placeChip(2, TRAVEL_F, rangeDeg + '°');
   }
 
   // ---------- rendering ----------
@@ -372,14 +332,15 @@
     flat = isFlat;
     $('flatG').classList.toggle('hidden', !isFlat);
     $('edgeG').classList.toggle('hidden', isFlat);
-    $('halo').classList.toggle('hidden', !isFlat);
   }
   function hintLR(d) { return Math.abs(d) < 0.05 ? '' : (d > 0 ? 'right side higher' : 'left side higher'); }
   function hintFB(d) { return Math.abs(d) < 0.05 ? '' : (d > 0 ? 'top edge higher' : 'bottom edge higher'); }
   function arrowLR(d) { return Math.abs(d) < 0.05 ? '' : (d > 0 ? '→ ' : '← '); }
   function arrowFB(d) { return Math.abs(d) < 0.05 ? '' : (d > 0 ? '↑ ' : '↓ '); }
   function setHint(id, lvl, arrow, text) {
-    $(id).textContent = lvl ? 'Level' : (arrow + text || ' ');
+    var el = $(id), t = arrow + text;
+    el.textContent = lvl ? '\u2713 Level' : (t || '\u00a0');
+    el.className = 'hint ' + (lvl ? 'lv' : (t ? 'off' : ''));
   }
   function setLabels(mode, a, b) {
     var key = mode + '|' + a + '|' + b;
@@ -424,7 +385,7 @@
     levelB = flat ? hyst(levelB, Math.abs(B)) : false;
     var isLevel = flat ? (levelA && levelB) : levelA;
 
-    // bubble: ease toward target for a liquid feel
+    // bubble eases toward its target
     bx += (tx - bx) * 0.4; by += (ty - by) * 0.4;
     if (flat) {
       $('bubbleF').setAttribute('transform', 'translate(' + (150 + bx * TRAVEL_F).toFixed(2) + ' ' + (150 - by * TRAVEL_F).toFixed(2) + ')');
@@ -450,10 +411,11 @@
       } else {
         setHint('hintA', levelA, horizX ? arrowLR(A) : arrowFB(A), horizX ? hintLR(A) : hintFB(A));
         $('hintB').textContent = B > 0.05 ? 'screen faces up' : (B < -0.05 ? 'screen faces down' : 'screen upright');
+        $('hintB').className = 'hint';
       }
       var tp = $('tiltPill');
       if (isLevel) tp.textContent = '✓ Level';
-      else if (flat) tp.innerHTML = 'Slope <b>' + total.toFixed(1) + '°</b> (' + (Math.tan(total * RAD) * 100).toFixed(1) + '%)';
+      else if (flat) tp.textContent = 'Slope ' + total.toFixed(1) + '° (' + (Math.tan(total * RAD) * 100).toFixed(1) + '%)';
       else tp.textContent = '';
     }
   }
